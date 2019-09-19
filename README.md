@@ -2,6 +2,14 @@
 
 This program lets you measure the response of the physical IR communications channel between two blinks. You can use it to figure out how much signal-to-noise you have to work with when designing blinks IR communication protocols.
 
+## WARNING
+
+This code will suppress sleep and IR code download. 
+
+If you leave this running it will eventually kill the battery and you will only be able to download a new program via the hardware programming port.  
+
+Be sure to remember to load a normal blinks program when you are done testing!
+
 ## Bare Metal
 
 Note that it is very unlike almost all other blinks programs you've ever seen in that it talks directly to the hardware. To make this possible, it includes the `hardware.h` file from BlinkOS and also turns off interrupt with `cli()` which effectively turns off BlinkOS's ability interrupt our code, so we have exclusive access to the hardware as long as we do not return from `setup()`.
