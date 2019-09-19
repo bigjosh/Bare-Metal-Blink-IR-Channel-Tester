@@ -34,7 +34,7 @@ Both modes generate their output on the `T` pin on the debug header of the circu
 
 To make measurments, you will want to connect an oscilloscope scope to the `G` and `T` pins of one TX mode blink and one RX mode blink and then point their respective test sides (as specified in `IR_LED_TO_TEST`) at each other. Here is one way that can look...
 
-![connections.jpg]()
+![](connections.jpg)
 
 In this case, I am testing face 4 on both blinks shown.
 
@@ -62,7 +62,7 @@ With the `T` pin outputs from the RX and TX blink each connected to a channel on
 
 With the blinks set up so that they can see each others' faces, you should see something like this...
 
-![TimeToTriggerByTX.png]()
+![](TimeToTriggerByTX.png)
 
 Here the YELLOW trace is TX and BLUE trace is RX.
 
@@ -80,7 +80,7 @@ Now separate the blinks so that the RX is looking into the wilderness. We do not
 
 It should look something like this...
 
- ![TimerToTriggerAmbient.png]()
+ ![](TimerToTriggerAmbient.png)
 
 Here the BLUE trace is the RX.
 
