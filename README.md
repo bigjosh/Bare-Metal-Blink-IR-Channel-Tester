@@ -6,41 +6,27 @@ This program lets you measure the response of the physical IR communications cha
 
 This code will suppress sleep and IR code download. 
 
-If you leave this running it will eventually kill the battery and you will only be able to download a new program via the hardware programming port.  
+If you leave this running it will eventually kill the battery and you will not be able to download a new program via IR.  
 
-Be sure to remember to load a normal blinks program when you are done testing!
+Be sure to remember to load a normal blinks program via the hardware programming port when you are done testing!
 
 ## Bare Metal
 
-Note that it is very unlike almost all other blinks programs you've ever seen in that it talks directly to the hardware. To make this possible, it includes the `hardware.h` file from BlinkOS and also turns off interrupt with `cli()` which effectively turns off BlinkOS's ability interrupt our code, so we have exclusive access to the hardware as long as we do not return from `setup()`.
+This is very unlike almost all other blinks programs you've ever seen in that it talks directly to the hardware. To make this possible, it includes the `hardware.h` file from BlinkOS and also turns off interrupts with `cli()` which effectively give us exclusive access to the hardware as long as we do not return from `setup()`. In exchange, we give up being able to use any blinklib or blinkOS functions or services - we have to do everything ourselves. 
 
 Note that there is almost never a good reason to do this in real life!
 
-## Concept
-
-To stay cheap, instead of a typical LED for transmit and photo-transistor to receive, blinks use IR LEDs for both transmitting and receiving. Transmitting on an LED is easy, just turn it on. Receiving on an LED is slightly trickier.  We treat the diode inside the LED as a capacitor but reverse charging it. When photons hit the junction, they carry charge across the barrier and discharge it. When enough photons have it, the voltage across the LED will drop below a digital 1 level and we can sense this.
-
-## Channel quality
-
-Our bandwidth is fundamentally limited by the amount if time it takes to accumulate enough photons on the RX LED to change it from a `1` voltage to a `0` voltage. The lower this time, the faster we can theoretically send data.  The brighter the TX LED and the clearer (more photons from the TX get to the RX), then the shorter time it will take to accumulate these photons. 
-
-There are also a bounds on the maximum time we can wait to accumulate enough photons. Physically, there will always be a leakage current across a non-ideal diode that will bleed the charge away. In practice, in a dark room this time is on the order of seconds, so it is not really a factor in practice.
-
-But since we want blinks to work in places that are not pitch dark, we do have to worry about photons from the ambient light reaching the RX LED. This is a real factor since even indirect sunlight can be brighter than our TX LED.
-
-As long as the time it takes for the ambient light to trigger the RX LED is *longer* than the time it takes for the TX LED to trigger the RX LED, then we have a shot at being able to reasonably send data across the channel. 
-
 ## Measuring channel quality
 
-This tester program lets us (almost) directly measure the time between when the TX LED turns on and when the RX LED triggers.
+This tester program lets us (almost) directly measure the time between when the TX LED turns on and when the RX LED triggers using an oscilloscope.
 
-The code has TX mode and RX mode. This is controlled by the `#define TX_MODE` at the top of the program, and it must be recompiled and re-downloaded each time this is changed. `1` means this blink will be transmitting, `0` means it will receiving. 
+The code has TX mode and RX mode. This is controlled by the `#define TX_MODE` at the top of the program. The program must be recompiled and re-downloaded each time this is changed. `1` means this blink will be transmitting, `0` means it will receiving. 
 
 The code also lets you specify which face to use with the `#define IR_LED_TO_TEST`. This can be 0-5 and indicates LED IR0-IR5 respectively. Again, you must recompile and redownload when you change this.
 
 Both modes generate their output on the `T` pin on the debug header of the circuit board. (Note that it seems like the `A` pin on this header does not work on newer blinks!)
 
-To make measurments, you will want to connect an oscilloscope scope to the `G` and `T` pins of one TX mode blink and one RX mode blink and then point their respective test sides (as specified in `IR_LED_TO_TEST`) at each other. Here is one way that can look...
+To make measurements, you will want to connect an oscilloscope scope to the `G` and `T` pins of one TX mode blink and one RX mode blink, and then point their respective test sides (as specified in `IR_LED_TO_TEST`) at each other. Here is one way that can look...
 
 ![](connections.jpg)
 
@@ -48,25 +34,11 @@ In this case, I am testing face 4 on both blinks shown.
 
 I cut little windows in the top silicone so I could stick some jumper wires into the debug port holes.     
 
-### TX side
-
-The blink continuously sends pulses on the indicated side. Each pulse is 10us wide and they have ~100us between them. 
-
-The blink turns debug pin `T` on when the IR LED is on. (Rising edge of `T` means IR LED just turned on)
-
-### RX side
-
-The blink charges up the indicated IR LED and waits for it to discharge.
-
-The blink turns on debug pin `T` while it is waiting. (Falling edge of `T` means IR LED just triggered)
-
-It also waits for about 120% of the LED on time to prevent triggering twice from the same incoming pulse. 
-  
-### Reading the results.
-
-With the `T` pin outputs from the RX and TX blink each connected to a channel on your scope, scale everything up so you can easily see a 2-3 volt signal and set your time scale to about 1us per div. Next set a trigger on the rising edge of the signal from the TX blink.
+With the `T` pin outputs from the RX and TX blink each connected to a channel on your scope, scale everything up so you can easily see a 2-3 volt signal. 
 
 #### Maximum theoretical bandwidth
+
+Set your time scale to about 1us per div. Turn on both the TX and RX signal channels. Set a trigger on the rising edge of the signal from the TX blink.
 
 With the blinks set up so that they can see each others' faces, you should see something like this...
 
@@ -84,7 +56,9 @@ You can also set the scope display to "infinite" if you want to accumulate a bun
 
 #### Ambient Noise
 
-Now separate the blinks so that the RX is looking into the wilderness. We do not care about the TX blink for this test, you you can turn off that channel on the scope and this time trigger on the rising edge of the RX `T` signal. 
+Set your time scale to about 1ms per div. We only care about the signal from the RX channel, so you can turn off the trace from the TX blink. Set a trigger on the rising edge of the signal from the RX blink.
+
+Now separate the blinks so that the RX is looking into the wilderness. 
 
 It should look something like this...
 
@@ -99,6 +73,36 @@ You can move the blink around and point the face you are testing a a bright wall
 You can also set the scope display to "infinite" if you want to accumulate a bunch of reading to find the boundaries.
 
 
+## Concept
+
+To stay cheap, instead of a typical LED for transmit and photo-transistor to receive, blinks use IR LEDs for both transmitting and receiving. Transmitting on an LED is easy, just turn it on. Receiving on an LED is slightly trickier.  We treat the diode inside the LED as a capacitor by reverse charging it. When photons hit the junction, they carry charge across the barrier and discharge it. When enough photons have hit, the voltage across the LED will drop below a digital 1 level and the micro-controller can sense this.
+
+## Channel quality
+
+Our bandwidth is fundamentally limited by the amount if time it takes to accumulate enough photons on the RX LED to change it from a `1` voltage to a `0` voltage. The lower this time, the faster we can theoretically send data.  The brighter the TX LED (more photons created) and the clearer the path (more photons that make it from the TX to the RX), then the shorter time it will take to accumulate these photons. 
+
+There are also a bounds on the maximum time we can wait to accumulate enough photons. Physically, there will always be a leakage current across a non-ideal diode that will bleed the charge away. In practice, in a dark room this time is on the order of seconds, so it is not really a factor in practice.
+
+But since we want blinks to work in places that are not pitch dark, we do have to worry about photons from the ambient light reaching the RX LED. This is a real factor since even indirect sunlight can be brighter than our TX LED.
+
+As long as the time it takes for the ambient light to trigger the RX LED is *longer* than the time it takes for the TX LED to trigger the RX LED, then we have a shot at being able to reasonably send data across the channel. 
+
+## Operation
+
+### TX side
+
+The blink continuously sends pulses on the indicated side. Each pulse is 10us wide and they have ~100us between them. 
+
+The blink turns debug pin `T` on when the IR LED is on. (Rising edge of `T` means IR LED just turned on)
+
+### RX side
+
+The blink charges up the indicated IR LED and waits for it to discharge.
+
+The blink turns on debug pin `T` while it is waiting. (Falling edge of `T` means IR LED just triggered)
+
+It also waits for about 120% of the LED on time to prevent triggering twice from the same incoming pulse. 
+  
 ## Conclusion
 
 That's all, you just measured the only two parameters that characterize the communication channel between any two blink faces! The longest TX trigger time and the shortest ambient trigger time across a population of blinks and across a range of lighting conditions and battery voltage levels will limit the maximum theoretical communications rate between blinks.
