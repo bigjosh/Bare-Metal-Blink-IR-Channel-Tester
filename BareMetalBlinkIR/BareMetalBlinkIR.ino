@@ -25,12 +25,12 @@ void tx_mode() {
 
   while (1) {
 
-    // IR LED on
-    IR_ANODE_PORT |= _BV( IR_LED_TO_TEST );
-  
     // Service Port A pin on
     SP_T_PORT |= _BV( SP_T_BIT );
-  
+
+    // IR LED on
+    IR_ANODE_PORT |= _BV( IR_LED_TO_TEST );
+    
     // LED ON
     _delay_us(IR_LED_ON_TIME_US);
   
@@ -40,9 +40,9 @@ void tx_mode() {
     // Service Port A pin off
     SP_T_PORT &= ~_BV( SP_T_BIT );
   
-    // Wait 100 us between flashes
+    // Wait between flashes
     // Gives time for scope the sync and for rx blink to recharge
-    _delay_us(100);
+    _delay_us( IR_LED_ON_TIME_US*3  );
 
   }
   
@@ -65,19 +65,17 @@ void rx_mode() {
     // Ok, cathode is now charged and ready to recieve.
 
 
+    // Service port on
     SP_T_PORT |= _BV( SP_T_BIT );
 
-
     // Wait for cathode to go low
-
     while ( IR_CATHODE_PIN & _BV( IR_LED_TO_TEST ) );
 
-    
+    // Servce port low
     SP_T_PORT &= ~_BV( SP_T_BIT );
-
     
     // Pause so we do not trigger again on the same incoming pulse
-    // 20 extra to account for clock differences between TX and RX
+    // 20 percent extra to account for clock differences between TX and RX
     _delay_us( (IR_LED_ON_TIME_US * 120) / 100 );
          
   }
