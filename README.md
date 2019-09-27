@@ -20,19 +20,17 @@ Note that there is almost never a good reason to do this in real life!
 
 This tester program lets us (almost) directly measure the time between when the TX LED turns on and when the RX LED triggers using an oscilloscope.
 
-The code has TX mode and RX mode. This is controlled by the `#define TX_MODE` at the top of the program. The program must be recompiled and re-downloaded each time this is changed. `1` means this blink will be transmitting, `0` means it will receiving. 
+The program has TX mode and RX mode.  
 
-The code also lets you specify which face to use with the `#define IR_LED_TO_TEST`. This can be 0-5 and indicates LED IR0-IR5 respectively. Again, you must recompile and redownload when you change this.
+A RED pixel indicates a face in RX mode, and a GREEN pixel indicates a face in TX mode. Pressing and lifting the button advances to the next mode/face. 
 
-Both modes generate their output on the `T` pin on the debug header of the circuit board. (Note that it seems like the `A` pin on this header does not work on newer blinks!)
+Both modes generate their output on the `T` pin on the debug header of the circuit board. (Note that it seems like the `T` and `R` pins are swapped and the `A` pin does not work at all on newer blinks!)
 
-To make measurements, you will want to connect an oscilloscope scope to the `G` and `T` pins of one TX mode blink and one RX mode blink, and then point their respective test sides (as specified in `IR_LED_TO_TEST`) at each other. Here is one way that can look...
+To make measurements, you will want to connect an oscilloscope scope to the `G` and `T` pins of one TX mode blink and one RX mode blink, and then point their respective test sides. Here is one way that can look...
 
 ![](connections.jpg)
 
-In this case, I am testing face 4 on both blinks shown.
-
-I cut little windows in the top silicone so I could stick some jumper wires into the debug port holes.     
+In this case, face 5 on the top blink is transmitting to face 0 on the bottom blink.
 
 With the `T` pin outputs from the RX and TX blink each connected to a channel on your scope, scale everything up so you can easily see a 2-3 volt signal. 
 
@@ -91,7 +89,7 @@ As long as the time it takes for the ambient light to trigger the RX LED is *lon
 
 ### TX side
 
-The blink continuously sends pulses on the indicated side. Each pulse is 10us wide and they have ~100us between them. 
+The blink continuously sends pulses on the indicated side. Each pulse is ~10us wide (#defined in code) and they have ~100us between them (computed 3*width). 
 
 The blink turns debug pin `T` on when the IR LED is on. (Rising edge of `T` means IR LED just turned on)
 
