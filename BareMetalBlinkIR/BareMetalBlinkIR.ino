@@ -16,7 +16,7 @@
 // On RX blink, signal goes low when enough photons received to trigger
 
 
-#define IR_LED_ON_TIME_US   10
+#define IR_LED_ON_TIME_US   25
 
 #include "hardware.h"
 #include "util/delay.h"   // Don't tell anyone that you can do this since normal blink code never should
